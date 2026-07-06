@@ -1,0 +1,47 @@
+defaults:
+  image: nobreak-labs/ubuntu-24.04
+  cpus: 2
+  memory: 3072
+
+vms:
+  - name: kube-control1
+    memory: 3072
+    networks:
+      - type: hostonly
+        ip: 192.168.153.11
+    # disks:
+    #   - name: data
+    #     size: 10GB
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+
+  - name: kube-node1
+    memory: 2560
+    networks:
+      - type: hostonly
+        ip: 192.168.153.21
+    # disks:
+    #   - name: data
+    #     size: 10GB
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+
+  - name: kube-node2
+    memory: 2560
+    networks:
+      - type: hostonly
+        ip: 192.168.153.22
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+
+  - name: kube-node3
+    memory: 2560
+    networks:
+      - type: hostonly
+        ip: 192.168.153.23
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh

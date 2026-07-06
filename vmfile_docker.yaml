@@ -1,0 +1,15 @@
+defaults:
+  image: nobreak-labs/ubuntu-24.04
+  cpus: 2
+  memory: 4096
+
+vms:
+  - name: docker
+    networks:
+      - type: hostonly
+        ip: 192.168.153.100
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+      - name: install-docker
+        path: scripts/ubuntu/install-docker.sh

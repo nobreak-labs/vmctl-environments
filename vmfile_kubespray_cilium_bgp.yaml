@@ -1,0 +1,109 @@
+defaults:
+  image: nobreak-labs/ubuntu-24.04
+  cpus: 2
+  memory: 3072
+
+vms:
+  - name: kube-control1
+    memory: 4096
+    networks:
+      - type: hostonly
+        ip: 192.168.153.11
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+
+  - name: kube-node1
+    memory: 3072
+    networks:
+      - type: hostonly
+        ip: 192.168.153.21
+    disks:
+      - name: data
+        size: 10GB
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+
+  - name: kube-node2
+    memory: 3072
+    networks:
+      - type: hostonly
+        ip: 192.168.153.22
+    disks:
+      - name: data
+        size: 10GB
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+
+  - name: kube-node3
+    memory: 3072
+    networks:
+      - type: hostonly
+        ip: 192.168.153.23
+    disks:
+      - name: data
+        size: 10GB
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+
+  - name: kube-router
+    memory: 1024
+    networks:
+      - type: hostonly
+        ip: 192.168.153.254
+      - type: hostonly
+        ip: 192.168.154.254
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+      - name: install-frr
+        inline: |
+          curl -s https://deb.frrouting.org/frr/keys.gpg | tee /usr/share/keyrings/frrouting.gpg > /dev/null
+          FRRVER="frr-stable"
+          echo deb '[signed-by=/usr/share/keyrings/frrouting.gpg]' https://deb.frrouting.org/frr $(lsb_release -s -c) $FRRVER | tee -a /etc/apt/sources.list.d/frr.list
+          apt-get update && apt-get install -y frr frr-pythontools
+      - name: enable-forwarding
+        inline: |
+          sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
+          sed -i 's/#net.ipv6.conf.all.forwarding=1/net.ipv6.conf.all.forwarding=1/g' /etc/sysctl.conf
+          sysctl -p
+      - name: configure-frr-bgp
+        inline: |
+          sed -i 's/bgpd=no/bgpd=yes/g' /etc/frr/daemons
+          cat << 'EOF' | tee /etc/frr/frr.conf
+          frr version 10.6.0
+          frr defaults traditional
+          hostname kube-router
+          log syslog informational
+          no ipv6 forwarding
+          service integrated-vtysh-config
+
+          router bgp 65000
+            bgp router-id 192.168.153.254
+            no bgp ebgp-requires-policy
+
+            neighbor 192.168.153.11 remote-as 65101
+            neighbor 192.168.153.11 description kube-control1
+            neighbor 192.168.153.21 remote-as 65102
+            neighbor 192.168.153.21 description kube-node1
+            neighbor 192.168.153.22 remote-as 65103
+            neighbor 192.168.153.22 description kube-node2
+            neighbor 192.168.153.23 remote-as 65104
+            neighbor 192.168.153.23 description kube-node3
+
+            address-family ipv4 unicast
+              neighbor 192.168.153.11 activate
+              neighbor 192.168.153.11 soft-reconfiguration inbound
+              neighbor 192.168.153.21 activate
+              neighbor 192.168.153.21 soft-reconfiguration inbound
+              neighbor 192.168.153.22 activate
+              neighbor 192.168.153.22 soft-reconfiguration inbound
+              neighbor 192.168.153.23 activate
+              neighbor 192.168.153.23 soft-reconfiguration inbound
+              redistribute connected
+            exit-address-family
+          EOF
+          systemctl restart frr

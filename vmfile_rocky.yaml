@@ -1,0 +1,14 @@
+defaults:
+  image: nobreak-labs/rocky-10
+  cpus: 2
+  memory: 2048
+
+vms:
+  - name: rocky-node1
+    networks:
+      - type: hostonly
+        ip: 192.168.153.10
+  # - name: rocky-node2
+  #   networks:
+  #     - type: hostonly
+  #       ip: 192.168.153.20

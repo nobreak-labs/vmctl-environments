@@ -1,0 +1,67 @@
+defaults:
+  image: nobreak-labs/ubuntu-24.04
+  cpus: 2
+  memory: 2048
+
+vms:
+  - name: git-repo
+    networks:
+      - type: hostonly
+        ip: 192.168.153.111
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+
+  - name: jenkins
+    networks:
+      - type: hostonly
+        ip: 192.168.153.112
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+
+  - name: tomcat
+    networks:
+      - type: hostonly
+        ip: 192.168.153.113
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+
+  - name: jenkins-node
+    networks:
+      - type: hostonly
+        ip: 192.168.153.114
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+
+  - name: docker
+    cpus: 4
+    memory: 4096
+    networks:
+      - type: hostonly
+        ip: 192.168.153.115
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+      - name: install-docker
+        path: scripts/ubuntu/install-docker.sh
+
+  - name: webserver
+    networks:
+      - type: hostonly
+        ip: 192.168.153.116
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+
+  - name: kubernetes
+    cpus: 4
+    memory: 8192
+    networks:
+      - type: hostonly
+        ip: 192.168.153.117
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh

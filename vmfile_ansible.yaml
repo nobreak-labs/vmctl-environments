@@ -1,0 +1,21 @@
+defaults:
+  image: nobreak-labs/rocky-10
+  cpus: 2
+  memory: 2048
+
+vms:
+  - name: ansible-control
+    networks:
+      - type: hostonly
+        ip: 192.168.153.101
+    provision:
+      - name: install-ansible
+        path: scripts/rocky/install-ansible.sh
+  - name: ansible-node1
+    networks:
+      - type: hostonly
+        ip: 192.168.153.102
+  - name: ansible-node2
+    networks:
+      - type: hostonly
+        ip: 192.168.153.103

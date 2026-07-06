@@ -1,0 +1,55 @@
+# vmfile.yaml
+#
+# [사용법]
+# 1. 이 파일을 프로젝트 디렉터리로 복사합니다.
+#      cp templates/vmfile_template.yaml vmfile.yaml
+# 2. defaults / vms 설정을 원하는 대로 수정합니다.
+# 3. `vmctl validate`로 검증 후 `vmctl up`으로 VM을 기동합니다.
+
+defaults:
+  image: nobreak-labs/rocky-10   # Vagrant Cloud 이미지 (owner/name 형식)
+  cpus: 2
+  memory: 2048                    # MB
+  # image_version: "10.1"         # 특정 버전 고정, 생략 시 최신 버전 사용
+  # provider: vmware_desktop      # 기본값: vmware_desktop
+
+# ssh:                            # 전역 SSH 기본값
+#   user: nobreak                 # 기본값: nobreak (최초 부팅 시 자동 생성)
+#   timeout: 300                  # SSH 준비 대기 시간(초)
+#   extra_public_keys:
+#     - ~/.ssh/id_ed25519.pub
+
+vms:
+  # 1. 기본 설정 (네트워크만 지정)
+  - name: vm1
+    networks:
+      - type: hostonly
+        ip: 192.168.153.11
+
+  # 2. 리소스 커스터마이징
+  - name: vm2
+    cpus: 1
+    memory: 1024
+    networks:
+      - type: hostonly
+        ip: 192.168.153.12
+      - type: hostonly
+        ip: 192.168.154.12
+
+  # 3. 다른 이미지 + 추가 디스크 + provision
+  - name: vm3
+    image: nobreak-labs/ubuntu-24.04
+    networks:
+      - type: hostonly
+        ip: 192.168.153.13
+    disks:
+      - name: data
+        size: 10GB
+    provision:
+      - name: install-packages
+        inline: |
+          apt-get update -y
+          apt-get install -y curl git
+      - name: setup
+        path: scripts/ubuntu/install-docker.sh   # 저장소 루트 기준 상대 경로
+        on_error: continue   # 기본값: stop

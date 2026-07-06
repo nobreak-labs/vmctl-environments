@@ -1,0 +1,43 @@
+defaults:
+  image: nobreak-labs/ubuntu-24.04
+  cpus: 2
+  memory: 2048
+
+vms:
+  - name: frr
+    networks:
+      - type: hostonly
+        ip: 192.168.153.254
+      - type: hostonly
+        ip: 192.168.154.254
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+      - name: install-frr
+        inline: |
+          curl -s https://deb.frrouting.org/frr/keys.gpg | tee /usr/share/keyrings/frrouting.gpg > /dev/null
+          FRRVER="frr-stable"
+          echo deb '[signed-by=/usr/share/keyrings/frrouting.gpg]' https://deb.frrouting.org/frr $(lsb_release -s -c) $FRRVER | tee -a /etc/apt/sources.list.d/frr.list
+          apt-get update && apt-get install -y frr frr-pythontools
+      - name: enable-forwarding
+        inline: |
+          sed -i 's/#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
+          sed -i 's/#net.ipv6.conf.all.forwarding=1/net.ipv6.conf.all.forwarding=1/g' /etc/sysctl.conf
+          sysctl -p
+      - name: configure-frr
+        inline: |
+          sed -i 's/ripd=no/ripd=yes/g' /etc/frr/daemons
+          cat << 'EOF' | tee /etc/frr/frr.conf
+          frr version 10.1.1
+          frr defaults traditional
+          hostname frr1
+          log syslog informational
+          no ipv6 forwarding
+          service integrated-vtysh-config
+          !
+          router rip
+            network 192.168.153.0/24
+            network 192.168.154.0/24
+          !
+          EOF
+          systemctl restart frr

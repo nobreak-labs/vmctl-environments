@@ -1,0 +1,20 @@
+defaults:
+  image: nobreak-labs/ubuntu-24.04
+  cpus: 2
+  memory: 2048
+
+vms:
+  - name: ubuntu-node1
+    networks:
+      - type: hostonly
+        ip: 192.168.153.10
+    provision:
+      - name: change-apt-repo
+        path: scripts/ubuntu/change-apt-repo.sh
+  # - name: ubuntu-node2
+  #   networks:
+  #     - type: hostonly
+  #       ip: 192.168.153.20
+  #   provision:
+  #     - name: change-apt-repo
+  #       path: scripts/ubuntu/change-apt-repo.sh
