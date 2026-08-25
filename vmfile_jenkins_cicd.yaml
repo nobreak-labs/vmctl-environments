@@ -7,7 +7,7 @@ vms:
   - name: git-repo
     networks:
       - type: hostonly
-        ip: 192.168.153.111
+        ip: 192.168.153.100
     provision:
       - name: change-apt-repo
         path: scripts/ubuntu/change-apt-repo.sh
@@ -15,7 +15,7 @@ vms:
   - name: jenkins
     networks:
       - type: hostonly
-        ip: 192.168.153.112
+        ip: 192.168.153.101
     provision:
       - name: change-apt-repo
         path: scripts/ubuntu/change-apt-repo.sh
@@ -23,7 +23,7 @@ vms:
   - name: tomcat
     networks:
       - type: hostonly
-        ip: 192.168.153.113
+        ip: 192.168.153.102
     provision:
       - name: change-apt-repo
         path: scripts/ubuntu/change-apt-repo.sh
@@ -31,7 +31,7 @@ vms:
   - name: jenkins-node
     networks:
       - type: hostonly
-        ip: 192.168.153.114
+        ip: 192.168.153.103
     provision:
       - name: change-apt-repo
         path: scripts/ubuntu/change-apt-repo.sh
@@ -41,7 +41,7 @@ vms:
     memory: 4096
     networks:
       - type: hostonly
-        ip: 192.168.153.115
+        ip: 192.168.153.104
     provision:
       - name: change-apt-repo
         path: scripts/ubuntu/change-apt-repo.sh
@@ -51,7 +51,7 @@ vms:
   - name: webserver
     networks:
       - type: hostonly
-        ip: 192.168.153.116
+        ip: 192.168.153.105
     provision:
       - name: change-apt-repo
         path: scripts/ubuntu/change-apt-repo.sh
@@ -61,7 +61,7 @@ vms:
     memory: 8192
     networks:
       - type: hostonly
-        ip: 192.168.153.117
+        ip: 192.168.153.106
     provision:
       - name: change-apt-repo
         path: scripts/ubuntu/change-apt-repo.sh

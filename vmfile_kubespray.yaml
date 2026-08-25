@@ -9,9 +9,6 @@ vms:
     networks:
       - type: hostonly
         ip: 192.168.153.11
-    # disks:
-    #   - name: data
-    #     size: 10GB
     provision:
       - name: change-apt-repo
         path: scripts/ubuntu/change-apt-repo.sh
@@ -21,9 +18,6 @@ vms:
     networks:
       - type: hostonly
         ip: 192.168.153.21
-    # disks:
-    #   - name: data
-    #     size: 10GB
     provision:
       - name: change-apt-repo
         path: scripts/ubuntu/change-apt-repo.sh
