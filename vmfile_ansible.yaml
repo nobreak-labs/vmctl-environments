@@ -1,5 +1,5 @@
 defaults:
-  image: nobreak-labs/rocky-10
+  image: nobreak-labs/rockylinux-10
   cpus: 2
   memory: 2048
 

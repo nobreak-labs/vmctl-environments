@@ -23,7 +23,7 @@
 
 ```yaml
 defaults:
-  image: nobreak-labs/rocky-10
+  image: nobreak-labs/rockylinux-10
   cpus: 2
   memory: 2048
 ```
@@ -36,7 +36,7 @@ defaults:
 
 | 옵션 | 설명 | 기본값 | 예시 |
 |------|------|--------|------|
-| `image` | Vagrant Cloud 이미지 이름 (`owner/name`) | `defaults.image` | `nobreak-labs/ubuntu-24.04` |
+| `image` | 이미지 이름 (`owner/name`) | `defaults.image` | `nobreak-labs/ubuntu-24.04` |
 | `image_version` | 이미지 버전 고정 | 최신 버전 | `"10.1"` |
 | `cpus` | CPU 코어 수 | `defaults.cpus` | `4` |
 | `memory` | 메모리 크기 (MB) | `defaults.memory` | `4096` |
@@ -54,7 +54,7 @@ defaults:
 
 ```yaml
 defaults:
-  image: nobreak-labs/rocky-10
+  image: nobreak-labs/rockylinux-10
   cpus: 2
   memory: 2048
 

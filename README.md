@@ -12,11 +12,11 @@
 ## 이미지
 
 - Ubuntu 24.04: `nobreak-labs/ubuntu-24.04`
-- Rocky Linux 10: `nobreak-labs/rocky-10`
+- Ubuntu 26.04: `nobreak-labs/ubuntu-26.04`
+- Rocky Linux 9: `nobreak-labs/rockylinux-9`
+- Rocky Linux 10: `nobreak-labs/rockylinux-10`
 
-이미지 검색: [Vagrant Cloud - nobreak-labs](https://portal.cloud.hashicorp.com/vagrant/discover/nobreak-labs)
-
-> vmctl은 이미지 이름을 Vagrant Cloud의 `owner/name` 형식으로 사용합니다 (`vmctl image pull <name>[:<version>]`).
+> vmctl은 이미지 이름을 `owner/name` 형식으로 사용합니다 (`vmctl image pull <name>[:<version>]`).
 
 ## 환경 목록
 

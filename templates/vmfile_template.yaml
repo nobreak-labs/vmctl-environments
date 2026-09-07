@@ -7,7 +7,7 @@
 # 3. `vmctl validate`로 검증 후 `vmctl up`으로 VM을 기동합니다.
 
 defaults:
-  image: nobreak-labs/rocky-10   # Vagrant Cloud 이미지 (owner/name 형식)
+  image: nobreak-labs/rockylinux-10   # 이미지 (owner/name 형식)
   cpus: 2
   memory: 2048                    # MB
   # image_version: "10.1"         # 특정 버전 고정, 생략 시 최신 버전 사용
