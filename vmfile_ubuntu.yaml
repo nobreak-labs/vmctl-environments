@@ -7,14 +7,16 @@ vms:
   - name: ubuntu-node1
     networks:
       - type: hostonly
-        ip: 192.168.153.10
+        mode: static
+        ip: 192.168.153.10/24
     provision:
       - name: change-apt-repo
         path: scripts/ubuntu/change-apt-repo.sh
   # - name: ubuntu-node2
   #   networks:
   #     - type: hostonly
-  #       ip: 192.168.153.20
+  #       mode: static
+  #       ip: 192.168.153.20/24
   #   provision:
   #     - name: change-apt-repo
   #       path: scripts/ubuntu/change-apt-repo.sh

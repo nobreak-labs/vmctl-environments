@@ -40,13 +40,54 @@ defaults:
 | `image_version` | 이미지 버전 고정 | 최신 버전 | `"10.1"` |
 | `cpus` | CPU 코어 수 | `defaults.cpus` | `4` |
 | `memory` | 메모리 크기 (MB) | `defaults.memory` | `4096` |
-| `networks` | hostonly 네트워크 목록 (`type`, `ip`, `netmask`) | - | `[{type: hostonly, ip: 192.168.153.10}]` |
+| `networks` | 추가 NIC 목록 (`type`, `mode`, `ip`, `subnet`, `netmask`) | - | `[{type: hostonly, mode: static, ip: 192.168.153.10/24}]` |
 | `disks` | 추가 디스크 목록 (`name`, `size`) | - | `[{name: data, size: 10GB}]` |
 | `provision` | 프로비저닝 스텝 목록 (`name`, `inline` 또는 `path`, `on_error`) | - | 아래 예시 참고 |
 | `ssh` | VM별 SSH 설정 (`user`, `timeout`, `extra_public_keys`) | 전역 `ssh` | - |
 
-> **참고**: 네트워크 타입은 현재 `hostonly`만 지원합니다. `netmask`를 생략하면 `255.255.255.0`이 적용됩니다.
 > **참고**: `provision`의 `inline`과 `path`는 동시에 사용할 수 없습니다.
+
+---
+
+### 3. 네트워크 (networks)
+
+`ethernet0`은 관리용 NAT로 고정되며 SSH·인터넷 경로로 사용합니다. `networks`에는 `nat`을 쓸 수 없고,
+선언한 순서대로 `ethernet1`부터 추가 NIC이 붙습니다.
+
+| 필드 | 설명 |
+|------|------|
+| `type` | 필수. `hostonly` 또는 `bridge` |
+| `mode` | `static`, `dhcp`, `none`. 생략 시 `ip`가 있으면 `static`, 없으면 `dhcp` |
+| `ip` | `static`에서 필수. IPv4 주소 또는 CIDR (`192.168.153.10/24`) |
+| `netmask` | 기존 표기 호환용. CIDR가 없으면 기본 `/24` |
+| `subnet` | `hostonly`의 `dhcp`/`none`에서 필수. 네트워크 CIDR (`192.168.154.0/24`) |
+
+- `static`: 지정한 IPv4 주소를 적용하고 DHCP를 끕니다.
+- `dhcp`: `bridge`는 외부 LAN에서, `hostonly`는 VMware DHCP에서 주소를 받습니다.
+- `none`: 링크만 올리고 IPv4/IPv6 자동 주소 설정을 모두 끕니다. provision이나 게스트 안에서 직접 주소를 정할 때 사용합니다.
+
+```yaml
+networks:
+  - type: hostonly          # VM ↔ VM, 호스트 ↔ VM 통신
+    mode: static
+    ip: 192.168.153.10/24
+
+  - type: hostonly
+    mode: dhcp
+    subnet: 192.168.154.0/24
+
+  - type: hostonly
+    mode: none
+    subnet: 192.168.155.0/24
+
+  - type: bridge            # 호스트가 붙어 있는 외부 LAN에 연결
+    mode: dhcp
+```
+
+> **참고**: `bridge`에는 `subnet`을 쓰지 않고, `hostonly` static은 `ip`에서 서브넷을 계산하므로 `subnet`이 필요 없습니다.
+> CIDR와 `netmask`를 함께 지정하면 값이 일치해야 합니다.
+> **참고**: 추가 NIC은 기본 경로와 DNS를 바꾸지 않고 관리 NAT에 그대로 둡니다. 게이트웨이/DNS 옵션은 제공하지 않습니다.
+> **참고**: 네트워크 설정을 바꾼 뒤에는 `vmctl restart <VM>`으로 반영합니다.
 
 ---
 
@@ -59,11 +100,12 @@ defaults:
   memory: 2048
 
 vms:
-  # 1. 기본 설정 (네트워크만 지정)
+  # 1. 기본 설정 (hostonly 고정 IP)
   - name: web-server
     networks:
       - type: hostonly
-        ip: 192.168.153.10
+        mode: static
+        ip: 192.168.153.10/24
 
   # 2. 리소스 커스터마이징
   - name: db-server
@@ -71,25 +113,37 @@ vms:
     memory: 4096
     networks:
       - type: hostonly
-        ip: 192.168.153.20
+        mode: static
+        ip: 192.168.153.20/24
 
   # 3. 다른 이미지 및 추가 디스크
   - name: storage-node
     image: nobreak-labs/ubuntu-24.04
     networks:
       - type: hostonly
-        ip: 192.168.153.30
+        mode: static
+        ip: 192.168.153.30/24
     disks:
       - name: data
         size: 50GB
 
-  # 4. 풀 옵션 (provision 포함)
+  # 4. 외부 LAN 연결 (bridge) + hostonly DHCP
+  - name: edge-node
+    networks:
+      - type: hostonly
+        mode: dhcp
+        subnet: 192.168.154.0/24
+      - type: bridge
+        mode: dhcp
+
+  # 5. 풀 옵션 (provision 포함)
   - name: k8s-master
     cpus: 2
     memory: 4096
     networks:
       - type: hostonly
-        ip: 192.168.153.40
+        mode: static
+        ip: 192.168.153.40/24
     disks:
       - name: data
         size: 20GB

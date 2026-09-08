@@ -5,7 +5,7 @@
 
 ## 사전 준비
 
-- vmctl 설치: [docs/vmctl-install.md](docs/vmctl-install.md)
+- vmctl 설치: [docs/vmctl-install.md](docs/vmctl-install.md) (이 저장소의 vmfile은 네트워크 `mode`/CIDR 표기를 쓰므로 **vmctl 0.6.0 이상** 필요)
 - 명령어 요약: [docs/vmctl-cheat-sheet.md](docs/vmctl-cheat-sheet.md)
 - 새 vmfile.yaml 작성: [templates/README.md](templates/README.md)
 
@@ -31,8 +31,28 @@
 | [vmfile_kubespray.yaml](vmfile_kubespray.yaml) | Kubespray로 구성하는 Kubernetes 클러스터 (control 1 + node 3) |
 | [vmfile_kubespray_cilium_bgp.yaml](vmfile_kubespray_cilium_bgp.yaml) | Kubespray + Cilium BGP 실습용 클러스터 + FRR 라우터 |
 
-> **참고**: vagrant-environments의 `Vagrantfile_openstack_aio`(bridged 네트워크, nested virtualization, 커스텀 디스크 컨트롤러 필요)는
-> vmctl의 현재 `vmfile.yaml` 스키마(`networks.type: hostonly`만 지원)로는 표현할 수 없어 제외했습니다.
+> **참고**: vagrant-environments의 `Vagrantfile_openstack_aio`는 bridged 네트워크가 0.6.0에서 지원되었지만,
+> nested virtualization과 커스텀 디스크 컨트롤러 설정은 아직 `vmfile.yaml`로 표현할 수 없어 제외했습니다.
+
+## 네트워크
+
+vmctl 0.6.0부터 추가 NIC에 `type: bridge`와 주소 설정 방식 `mode`(`static` / `dhcp` / `none`), CIDR 표기를 쓸 수 있습니다.
+관리용 NAT(`ethernet0`)는 그대로 유지되므로 기존 SSH 접속 경로는 바뀌지 않습니다.
+
+```yaml
+networks:
+  - type: hostonly            # VM ↔ VM, 호스트 ↔ VM 통신
+    mode: static
+    ip: 192.168.153.11/24
+  - type: hostonly
+    mode: dhcp                # VMware DHCP에서 주소 수신
+    subnet: 192.168.154.0/24
+  - type: bridge
+    mode: dhcp                # 호스트가 붙어 있는 외부 LAN에 연결
+```
+
+이 저장소의 `vmfile_*.yaml`은 모두 `hostonly` + `mode: static` + CIDR 표기를 사용합니다.
+필드별 설명은 [templates/README.md](templates/README.md), 명령/설정 요약은 [docs/vmctl-cheat-sheet.md](docs/vmctl-cheat-sheet.md)를 참고하세요.
 
 ## 사용법
 

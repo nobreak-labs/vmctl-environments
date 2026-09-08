@@ -19,29 +19,53 @@ defaults:
 #   extra_public_keys:
 #     - ~/.ssh/id_ed25519.pub
 
+# [네트워크]
+# ethernet0은 관리용 NAT로 고정되며 SSH/인터넷 경로로 사용합니다 (networks에 nat은 사용 불가).
+# networks[]는 선언 순서대로 ethernet1부터 추가되는 NIC입니다.
+#   type   : hostonly | bridge
+#   mode   : static | dhcp | none   (생략 시 ip가 있으면 static, 없으면 dhcp)
+#   ip     : static에서 필수. CIDR(192.168.153.11/24) 또는 netmask와 함께 사용
+#   subnet : hostonly의 dhcp/none에서 필수 (예: 192.168.154.0/24). bridge에는 사용하지 않음
+# 추가 NIC은 기본 경로와 DNS를 바꾸지 않고 관리 NAT에 그대로 둡니다.
+
 vms:
-  # 1. 기본 설정 (네트워크만 지정)
+  # 1. 기본 설정 (hostonly 고정 IP)
   - name: vm1
     networks:
       - type: hostonly
-        ip: 192.168.153.11
+        mode: static
+        ip: 192.168.153.11/24
 
-  # 2. 리소스 커스터마이징
+  # 2. 리소스 커스터마이징 + NIC 2개
   - name: vm2
     cpus: 1
     memory: 1024
     networks:
       - type: hostonly
-        ip: 192.168.153.12
+        mode: static
+        ip: 192.168.153.12/24
       - type: hostonly
-        ip: 192.168.154.12
+        mode: static
+        ip: 192.168.154.12/24
 
   # 3. 다른 이미지 + 추가 디스크 + provision
   - name: vm3
     image: nobreak-labs/ubuntu-24.04
     networks:
       - type: hostonly
-        ip: 192.168.153.13
+        mode: static
+        ip: 192.168.153.13/24
+      # - type: hostonly
+      #   mode: dhcp               # VMware DHCP에서 주소 수신
+      #   subnet: 192.168.154.0/24
+      # - type: hostonly
+      #   mode: none               # 링크만 활성화, 주소는 게스트에서 직접 설정
+      #   subnet: 192.168.155.0/24
+      # - type: bridge
+      #   mode: dhcp               # 호스트가 붙어 있는 외부 LAN의 DHCP 사용
+      # - type: bridge
+      #   mode: static
+      #   ip: 192.168.0.201/24     # 외부 LAN 대역에 맞게 지정
     disks:
       - name: data
         size: 10GB

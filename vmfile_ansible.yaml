@@ -7,15 +7,18 @@ vms:
   - name: ansible-control
     networks:
       - type: hostonly
-        ip: 192.168.153.101
+        mode: static
+        ip: 192.168.153.101/24
     provision:
       - name: install-ansible
         path: scripts/rocky/install-ansible.sh
   - name: ansible-node1
     networks:
       - type: hostonly
-        ip: 192.168.153.102
+        mode: static
+        ip: 192.168.153.102/24
   - name: ansible-node2
     networks:
       - type: hostonly
-        ip: 192.168.153.103
+        mode: static
+        ip: 192.168.153.103/24

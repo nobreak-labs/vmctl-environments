@@ -59,8 +59,41 @@ SSH 접속 시 터미널 I/O가 `logs/{날짜}/{vmname}/{시간}.log`에 자동 
 
 ## 네트워크
 
-- `vmctl network list`: VMware 네트워크 목록 + VM 사용 현황
-- `vmctl network prune [--yes]`: VM이 없는 네트워크 삭제
+- `vmctl network list`: VMware 네트워크 목록 + VM 사용 현황 (DHCP 열은 VMware 서비스의 on/off, bridge는 `external` 표시)
+- `vmctl network prune [--yes]`: VM이 없는 네트워크 삭제 (vmctl이 만든 네트워크만 대상)
+
+### vmfile.yaml 네트워크 설정
+
+`ethernet0`은 관리용 NAT로 고정되어 SSH·인터넷 경로로 쓰이고, `networks[]`는 선언 순서대로
+`ethernet1`부터 붙는 추가 NIC입니다. `nat`은 `networks`에 쓸 수 없습니다.
+
+| 필드 | 설명 |
+|------|------|
+| `type` | 필수. `hostonly` 또는 `bridge` |
+| `mode` | `static`, `dhcp`, `none`. 생략 시 `ip`가 있으면 `static`, 없으면 `dhcp` |
+| `ip` | `static`에서 필수. IPv4 주소 또는 CIDR |
+| `netmask` | 기존 표기 호환용. CIDR가 없으면 기본 `/24` |
+| `subnet` | `hostonly`의 `dhcp`/`none`에서 필수. 네트워크 CIDR |
+
+```yaml
+networks:
+  - type: hostonly
+    mode: static
+    ip: 192.168.153.11/24      # CIDR 또는 IP + netmask
+  - type: hostonly
+    mode: dhcp                 # VMware DHCP에서 주소 수신
+    subnet: 192.168.154.0/24
+  - type: hostonly
+    mode: none                 # 링크만 활성화, 자동 주소 설정 없음
+    subnet: 192.168.155.0/24
+  - type: bridge
+    mode: dhcp                 # 외부 LAN DHCP
+```
+
+- 추가 NIC은 기본 경로와 DNS를 바꾸지 않고 관리 NAT에 그대로 둡니다.
+- 네트워크 설정을 바꾼 뒤에는 `vmctl restart <VM>`으로 반영합니다.
+- hostonly DHCP는 VMware DHCP 풀과 고정 IP 대역이 겹치면 오류가 납니다.
+- DHCP 주소 수신은 비동기이므로 `vmctl exec <VM> -- ip -4 addr`로 확인합니다.
 
 ## 전역 플래그
 

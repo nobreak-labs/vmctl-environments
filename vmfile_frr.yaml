@@ -7,9 +7,11 @@ vms:
   - name: frr
     networks:
       - type: hostonly
-        ip: 192.168.153.254
+        mode: static
+        ip: 192.168.153.254/24
       - type: hostonly
-        ip: 192.168.154.254
+        mode: static
+        ip: 192.168.154.254/24
     provision:
       - name: change-apt-repo
         path: scripts/ubuntu/change-apt-repo.sh

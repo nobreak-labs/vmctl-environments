@@ -8,7 +8,8 @@ vms:
     memory: 3072
     networks:
       - type: hostonly
-        ip: 192.168.153.11
+        mode: static
+        ip: 192.168.153.11/24
     provision:
       - name: change-apt-repo
         path: scripts/ubuntu/change-apt-repo.sh
@@ -17,7 +18,8 @@ vms:
     memory: 2560
     networks:
       - type: hostonly
-        ip: 192.168.153.21
+        mode: static
+        ip: 192.168.153.21/24
     provision:
       - name: change-apt-repo
         path: scripts/ubuntu/change-apt-repo.sh
@@ -26,7 +28,8 @@ vms:
     memory: 2560
     networks:
       - type: hostonly
-        ip: 192.168.153.22
+        mode: static
+        ip: 192.168.153.22/24
     provision:
       - name: change-apt-repo
         path: scripts/ubuntu/change-apt-repo.sh
@@ -35,7 +38,8 @@ vms:
     memory: 2560
     networks:
       - type: hostonly
-        ip: 192.168.153.23
+        mode: static
+        ip: 192.168.153.23/24
     provision:
       - name: change-apt-repo
         path: scripts/ubuntu/change-apt-repo.sh

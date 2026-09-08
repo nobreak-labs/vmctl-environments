@@ -7,8 +7,10 @@ vms:
   - name: rocky-node1
     networks:
       - type: hostonly
-        ip: 192.168.153.10
+        mode: static
+        ip: 192.168.153.10/24
   # - name: rocky-node2
   #   networks:
   #     - type: hostonly
-  #       ip: 192.168.153.20
+  #       mode: static
+  #       ip: 192.168.153.20/24
