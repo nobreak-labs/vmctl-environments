@@ -1,0 +1,25 @@
+defaults:
+  image: nobreak-labs/ubuntu-24.04
+  cpus: 4
+  memory: 16,384
+vms:
+  - name: openstack-aio
+    networks:
+      - type: hostonly
+        mode: static
+        ip: 192.168.153.10/24
+      - type: hostonly
+        mode: static
+        ip: 192.168.154.10/24
+      - type: bridge
+        mode: none
+        
+    disks:
+      - name: cinder
+        size: 20GB
+      # - name: swift1
+      #   size: 20GB
+      # - name: swift2
+      #   size: 20GB
+      # - name: swift3
+      #   size: 20GB
