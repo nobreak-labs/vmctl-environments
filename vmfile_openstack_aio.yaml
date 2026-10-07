@@ -17,9 +17,9 @@ vms:
     disks:
       - name: cinder
         size: 20GB
-      # - name: swift1
-      #   size: 20GB
-      # - name: swift2
-      #   size: 20GB
-      # - name: swift3
-      #   size: 20GB
+      - name: swift1
+        size: 20GB
+      - name: swift2
+        size: 20GB
+      - name: swift3
+        size: 20GB
