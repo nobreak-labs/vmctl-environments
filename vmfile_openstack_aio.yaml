@@ -1,7 +1,7 @@
 defaults:
   image: nobreak-labs/ubuntu-24.04
   cpus: 4
-  memory: 16,384
+  memory: 16384
 vms:
   - name: openstack-aio
     networks:
