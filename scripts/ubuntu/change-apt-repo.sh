@@ -10,8 +10,8 @@ if [ "$RELEASE" = "jammy" ]; then
   elif [ "$ARCH" = "aarch64" ]; then
     sed -i 's/ports.ubuntu.com/ftp.kaist.ac.kr/g' /etc/apt/sources.list
   fi
-elif [ "$RELEASE" = "noble" ]; then
-  # Ubuntu 24.04
+elif [ "$RELEASE" = "noble" ] || [ "$RELEASE" = "resolute" ]; then
+  # Ubuntu 24.04 / 26.04
   if [ "$ARCH" = "x86_64" ]; then
     sed -i 's|^URIs:.*|URIs: http://ftp.kaist.ac.kr/ubuntu/|g' /etc/apt/sources.list.d/ubuntu.sources
   elif [ "$ARCH" = "aarch64" ]; then
