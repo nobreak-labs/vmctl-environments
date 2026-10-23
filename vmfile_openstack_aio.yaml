@@ -12,8 +12,7 @@ vms:
         mode: static
         ip: 192.168.154.10/24
       - type: bridge
-        mode: none
-        
+        mode: none      
     disks:
       - name: cinder
         size: 20GB

@@ -91,6 +91,81 @@ networks:
 
 ---
 
+### 4. 프로비저닝 (provision)
+
+`provision`에 필요한 작업을 스텝별로 나열하고, 각 스텝의 `inline: |` 아래에 셸 스크립트를 작성합니다. 별도 스크립트 파일 없이 YAML 파일 하나에 설치와 설정 작업을 담을 수 있습니다.
+
+#### 여러 명령과 설정 파일 작성
+
+다음은 Ubuntu VM에서 패키지를 설치한 뒤 설정 파일을 만드는 예시입니다.
+
+```yaml
+provision:
+  - name: install-packages
+    inline: |
+      #!/bin/bash
+      set -e
+
+      apt-get update
+      apt-get install -y curl git
+  - name: write-config
+    inline: |
+      #!/bin/bash
+      set -e
+
+      install -d -m 0755 /opt/example
+      cat <<'EOF' > /opt/example/app.conf
+      APP_ENV=development
+      LOG_LEVEL=info
+      EOF
+    # on_error: continue   # 실패해도 다음 스텝 진행. 기본값: stop
+```
+
+- `|`는 스크립트의 줄바꿈을 유지합니다. 본문은 `inline`보다 더 깊게, 일정하게 들여씁니다.
+- 각 스텝은 별도 스크립트로 작성합니다. 다른 스텝에서도 필요한 셸 변수는 해당 스텝에서 다시 정의합니다.
+- 각 스크립트에 `set -e`를 넣으면 명령 실패 시 해당 스텝이 중단됩니다. `on_error`는 스텝 실패 후 처리를 정합니다.
+- heredoc의 종료 구분자 `EOF`는 위 예시처럼 `cat`과 같은 깊이로 들여씁니다. YAML이 공통 들여쓰기를 제거하면 셸이 올바르게 인식합니다.
+- `<<'EOF'`는 본문의 `$변수`와 `$(명령)`을 그대로 기록합니다. 값을 확장하려면 `<<EOF`를 사용합니다.
+- 패키지 설치 명령은 VM 이미지에 맞춰 작성합니다. Ubuntu는 `apt-get`, Rocky Linux는 `dnf`를 사용합니다.
+
+#### 반복 스크립트를 앵커와 별칭으로 재사용
+
+첫 번째 `inline`에 `&prepare_workspace`로 앵커를 선언하고, 다른 VM에서는 `*prepare_workspace`로 같은 스크립트를 참조합니다.
+
+```yaml
+defaults:
+  image: nobreak-labs/ubuntu-24.04
+  cpus: 2
+  memory: 2048
+
+vms:
+  - name: app1
+    provision:
+      - name: prepare-workspace
+        inline: &prepare_workspace |
+          #!/bin/bash
+          set -e
+
+          install -d -m 0755 /opt/example
+
+  - name: app2
+    provision:
+      - name: prepare-workspace
+        inline: *prepare_workspace
+      - name: write-node-config
+        inline: |
+          #!/bin/bash
+          set -e
+
+          echo 'NODE_NAME=app2' > /opt/example/node.conf
+```
+
+앵커는 참조보다 먼저 선언해야 하며, 같은 YAML 파일 안에서만 사용할 수 있습니다. 별칭은 스크립트 전체를 재사용하므로 VM별로 다른 작업은 별도 스텝에 작성합니다. 각 VM에서 스크립트가 실행될 때 `$(uname -m)` 같은 셸 표현식이 평가됩니다.
+
+실제 구성은 루트의 [vmfile_jenkins_cicd.yaml](../vmfile_jenkins_cicd.yaml)과 [vmfile_kubespray.yaml](../vmfile_kubespray.yaml)을 참고하세요.
+
+---
+
 ## 구성 예제
 
 ```yaml
@@ -138,6 +213,7 @@ vms:
 
   # 5. 풀 옵션 (provision 포함)
   - name: k8s-master
+    image: nobreak-labs/ubuntu-24.04
     cpus: 2
     memory: 4096
     networks:
@@ -148,6 +224,11 @@ vms:
       - name: data
         size: 20GB
     provision:
-      - name: install-docker
-        path: ./scripts/ubuntu/install-docker.sh
+      - name: install-packages
+        inline: |
+          #!/bin/bash
+          set -e
+
+          apt-get update
+          apt-get install -y curl git
 ```
