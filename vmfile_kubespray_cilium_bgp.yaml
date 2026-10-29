@@ -1,18 +1,17 @@
 defaults:
   image: nobreak-labs/ubuntu-26.04
-  cpus: 2
-  memory: 3072
+  cpus: 4
+  memory: 4096
 
 vms:
   - name: kube-control1
-    memory: 4096
     networks:
       - type: hostonly
         mode: static
         ip: 192.168.153.11/24
     # disks:
-    #   - name: data
-    #     size: 20GB
+    #   - name: democratic-csi
+    #     size: 50GB
     provision:
       - name: change-apt-repo
         inline: &change_apt_repo |
@@ -38,43 +37,40 @@ vms:
           fi
 
   - name: kube-node1
-    memory: 3072
     networks:
       - type: hostonly
         mode: static
         ip: 192.168.153.21/24
     # disks:
-    #   - name: data
-    #     size: 20GB
+    #   - name: ceph-osd
+    #     size: 50GB
     provision:
       - name: change-apt-repo
         inline: *change_apt_repo
 
   - name: kube-node2
-    memory: 3072
     networks:
       - type: hostonly
         mode: static
         ip: 192.168.153.22/24
     # disks:
-    #   - name: data
-    #     size: 20GB
+    #   - name: ceph-osd
+    #     size: 50GB
     provision:
       - name: change-apt-repo
         inline: *change_apt_repo
 
-  - name: kube-node3
-    memory: 3072
-    networks:
-      - type: hostonly
-        mode: static
-        ip: 192.168.153.23/24
-    # disks:
-    #   - name: data
-    #     size: 20GB
-    provision:
-      - name: change-apt-repo
-        inline: *change_apt_repo
+  # - name: kube-node3
+  #   networks:
+  #     - type: hostonly
+  #       mode: static
+  #       ip: 192.168.153.23/24
+  #   # disks:
+  #   #   - name: ceph-osd
+  #   #     size: 50GB
+  #   provision:
+  #     - name: change-apt-repo
+  #       inline: *change_apt_repo
 
   - name: kube-router
     memory: 1024
@@ -120,8 +116,6 @@ vms:
             neighbor 192.168.153.21 description kube-node1
             neighbor 192.168.153.22 remote-as 65103
             neighbor 192.168.153.22 description kube-node2
-            neighbor 192.168.153.23 remote-as 65104
-            neighbor 192.168.153.23 description kube-node3
 
             address-family ipv4 unicast
               neighbor 192.168.153.11 activate
@@ -130,8 +124,6 @@ vms:
               neighbor 192.168.153.21 soft-reconfiguration inbound
               neighbor 192.168.153.22 activate
               neighbor 192.168.153.22 soft-reconfiguration inbound
-              neighbor 192.168.153.23 activate
-              neighbor 192.168.153.23 soft-reconfiguration inbound
               redistribute connected
             exit-address-family
           EOF

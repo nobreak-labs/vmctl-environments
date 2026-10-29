@@ -1,18 +1,17 @@
 defaults:
   image: nobreak-labs/ubuntu-26.04
-  cpus: 2
-  memory: 3072
+  cpus: 4
+  memory: 4096
 
 vms:
   - name: kube-control1
-    memory: 3072
     networks:
       - type: hostonly
         mode: static
         ip: 192.168.153.11/24
-    # disks:
-    #   - name: data
-    #     size: 20GB
+    disks:
+      - name: democratic-csi
+        size: 50GB
     provision:
       - name: change-apt-repo
         inline: &change_apt_repo |
@@ -38,41 +37,39 @@ vms:
           fi
 
   - name: kube-node1
-    memory: 2560
     networks:
       - type: hostonly
         mode: static
         ip: 192.168.153.21/24
     # disks:
-    #   - name: data
-    #     size: 20GB
+    #   - name: ceph-osd
+    #     size: 50GB
     provision:
       - name: change-apt-repo
         inline: *change_apt_repo
 
   - name: kube-node2
-    memory: 2560
     networks:
       - type: hostonly
         mode: static
         ip: 192.168.153.22/24
     # disks:
-    #   - name: data
-    #     size: 20GB
+    #   - name: ceph-osd
+    #     size: 50GB
     provision:
       - name: change-apt-repo
         inline: *change_apt_repo
     
-  - name: kube-node3
-    memory: 2560
-    networks:
-      - type: hostonly
-        mode: static
-        ip: 192.168.153.23/24
-    # disks:
-    #   - name: data
-    #     size: 20GB
-    provision:
-      - name: change-apt-repo
-        inline: *change_apt_repo
-
+  # - name: kube-node3
+  #   cpus: 4
+  #   memory: 3000
+  #   networks:
+  #     - type: hostonly
+  #       mode: static
+  #       ip: 192.168.153.23/24
+  #   # disks:
+  #   #   - name: ceph-osd
+  #   #     size: 50GB
+  #   provision:
+  #     - name: change-apt-repo
+  #       inline: *change_apt_repo
