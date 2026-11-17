@@ -5,8 +5,8 @@ set -euo pipefail
 GRUB_TIMEOUT_SEC="${GRUB_TIMEOUT_SEC:-5}"
 
 if [[ $EUID -ne 0 ]]; then
-  echo "ERROR: root 권한으로 실행하세요."
-  echo "예: sudo $0"
+  echo "ERROR: This script must be run as root."
+  echo "Example: sudo $0"
   exit 1
 fi
 
@@ -14,17 +14,17 @@ KERNEL="$(uname -r)"
 INITRAMFS="/boot/initramfs-${KERNEL}.img"
 KERNEL_IMAGE="/lib/modules/${KERNEL}/vmlinuz"
 MODDIR="/usr/lib/dracut/modules.d/98dracut-systemd"
-SOURCE_FILE="${MODDIR}/dracut-emergency.sh"   # 정확한 경로로 고정 (백업 파일 오인 방지)
+SOURCE_FILE="${MODDIR}/dracut-emergency.sh"   # Fixed path (avoids picking up backup files by mistake)
 BACKUP="${SOURCE_FILE}.rhcsa-original"
 RESCUE_HOOK="/usr/lib/kernel/install.d/51-dracut-rescue.install"
 BLS_DIR="/boot/loader/entries"
 LAB_SHELL='exec /bin/sh -i -l'
 
-# 이미지마다 /etc/machine-id 와 BLS 항목 이름의 machine-id가 다를 수 있으므로
-# 현재 커널의 BLS 항목에서 machine-id를 가져온다.
+# The machine-id in /etc/machine-id may differ from the one in the BLS entry name
+# depending on the image, so take the machine-id from the current kernel's BLS entry.
 ENTRY="$(ls "${BLS_DIR}"/*-"${KERNEL}".conf 2>/dev/null | head -n1 || true)"
 if [[ -z "$ENTRY" ]]; then
-  echo "ERROR: ${KERNEL} 의 BLS 항목을 ${BLS_DIR} 에서 찾을 수 없습니다."
+  echo "ERROR: BLS entry for ${KERNEL} not found in ${BLS_DIR}."
   exit 1
 fi
 ENTRY_MID="$(basename "$ENTRY" "-${KERNEL}.conf")"
@@ -36,30 +36,30 @@ echo "kernel        : ${KERNEL}"
 echo "BLS entry     : ${ENTRY}"
 echo "dracut source : ${SOURCE_FILE}"
 
-echo "[1/8] dracut-config-rescue 설치 확인"
+echo "[1/8] Checking dracut-config-rescue package"
 if ! rpm -q dracut-config-rescue >/dev/null 2>&1; then
   dnf install -y -q dracut-config-rescue
 fi
 
-echo "[2/8] dracut-emergency 원본 확보"
+echo "[2/8] Securing original dracut-emergency script"
 if [[ -f "$BACKUP" ]]; then
-  # 이전 실행에서 남은 백업으로 원본 복구
-  grep -q 'exec sulogin' "$BACKUP" || { echo "ERROR: 백업 파일이 원본이 아닙니다: $BACKUP"; exit 1; }
+  # Restore the original from a backup left by a previous run
+  grep -q 'exec sulogin' "$BACKUP" || { echo "ERROR: Backup file is not the original: $BACKUP"; exit 1; }
   cp -a "$BACKUP" "$SOURCE_FILE"
 else
-  grep -q 'exec sulogin' "$SOURCE_FILE" || { echo "ERROR: 원본에 'exec sulogin'이 없습니다: $SOURCE_FILE"; exit 1; }
+  grep -q 'exec sulogin' "$SOURCE_FILE" || { echo "ERROR: 'exec sulogin' not found in original: $SOURCE_FILE"; exit 1; }
   cp -a "$SOURCE_FILE" "$BACKUP"
 fi
-# 이전 버전 스크립트가 남긴 찌꺼기 정리 (*.rhcsa-original.rhcsa-original, *.lab)
+# Clean up leftovers from older versions of this script (*.rhcsa-original.rhcsa-original, *.lab)
 rm -f "${BACKUP}".* "${SOURCE_FILE}.lab"
 
-echo "[3/8] 랜덤 root 패스워드 설정"
+echo "[3/8] Setting random root password"
 TEMP_ROOT_PASSWORD="$(openssl rand -base64 24 | tr -d '\n')"
 echo "root:${TEMP_ROOT_PASSWORD}" | chpasswd
 unset TEMP_ROOT_PASSWORD
 
-echo "[4/8] 실습용 emergency shell 적용 (임시)"
-# 이후 단계에서 실패해도 원본 파일은 반드시 복구
+echo "[4/8] Applying lab emergency shell (temporary)"
+# Always restore the original file, even if a later step fails
 trap 'cp -a "$BACKUP" "$SOURCE_FILE"' EXIT
 
 PATCHED="$(mktemp)"
@@ -68,29 +68,29 @@ sed '/^[[:space:]]*if getargbool 0 SYSTEMD_SULOGIN_FORCE;/,/^[[:space:]]*fi$/c\
 sh -n "$PATCHED"
 if grep -q 'sulogin' "$PATCHED" || ! grep -qF "$LAB_SHELL" "$PATCHED"; then
   rm -f "$PATCHED"
-  echo "ERROR: dracut-emergency 패치 실패 (dracut 버전이 바뀌었는지 확인)"
+  echo "ERROR: Failed to patch dracut-emergency (check whether the dracut version has changed)"
   exit 1
 fi
-cat "$PATCHED" > "$SOURCE_FILE"   # 권한/SELinux 컨텍스트 유지
+cat "$PATCHED" > "$SOURCE_FILE"   # Preserve permissions and SELinux context
 rm -f "$PATCHED"
 
-echo "[5/8] 정상 initramfs 재생성"
+echo "[5/8] Regenerating default initramfs"
 dracut -f "$INITRAMFS" "$KERNEL"
 
-echo "[6/8] rescue 이미지/부팅 항목 재생성"
+echo "[6/8] Regenerating rescue image and boot entry"
 rm -f "$RESCUE_ENTRY" "$RESCUE_KERNEL" "$RESCUE_INITRAMFS" "/boot/.vmlinuz-0-rescue-${ENTRY_MID}.hmac"
-# 3번째 인자의 상위 디렉터리가 존재하지 않아야 /boot 아래 BLS 방식으로 생성됨
+# The parent directory of the 3rd argument must not exist so the hook creates a BLS entry under /boot
 KERNEL_INSTALL_MACHINE_ID="$ENTRY_MID" \
   "$RESCUE_HOOK" add "$KERNEL" "/boot/${ENTRY_MID}/${KERNEL}" "$KERNEL_IMAGE"
 
-echo "[7/8] dracut 원본 파일 복구 + GRUB 메뉴 대기 시간 ${GRUB_TIMEOUT_SEC}초"
+echo "[7/8] Restoring original dracut file + setting GRUB menu timeout to ${GRUB_TIMEOUT_SEC}s"
 cp -a "$BACKUP" "$SOURCE_FILE"
 trap - EXIT
 sed -i "s/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=${GRUB_TIMEOUT_SEC}/" /etc/default/grub
 grub2-editenv - unset menu_auto_hide
 grub2-mkconfig -o /boot/grub2/grub.cfg >/dev/null 2>&1
 
-echo "[8/8] 결과 확인"
+echo "[8/8] Verifying results"
 fail=0
 check_initrd() {
   local img="$1" tmp
@@ -111,21 +111,21 @@ check_initrd "$RESCUE_INITRAMFS"
 if [[ -f "$RESCUE_ENTRY" && -f "$RESCUE_KERNEL" ]]; then
   echo "  OK   $RESCUE_ENTRY ($(sed -n 's/^title //p' "$RESCUE_ENTRY"))"
 else
-  echo "  FAIL rescue 부팅 항목 없음"
+  echo "  FAIL Rescue boot entry not found"
   fail=1
 fi
 
 if grep -q 'sulogin' "$SOURCE_FILE"; then
-  echo "  OK   ${SOURCE_FILE} 원본 상태"
+  echo "  OK   ${SOURCE_FILE} is in original state"
 else
-  echo "  FAIL ${SOURCE_FILE} 원본 복구 안 됨"
+  echo "  FAIL ${SOURCE_FILE} was not restored"
   fail=1
 fi
 
 echo
 if [[ $fail -eq 0 ]]; then
-  echo "OK: rd.break 실습 환경 준비 완료"
+  echo "OK: rd.break lab environment is ready"
 else
-  echo "ERROR: 일부 항목 실패"
+  echo "ERROR: Some checks failed"
   exit 1
 fi
