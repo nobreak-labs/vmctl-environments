@@ -39,6 +39,14 @@ vmctl version
 vmctl completion zsh > $(brew --prefix)/share/zsh/site-functions/_vmctl
 ```
 
+**bash (Linux)**
+
+```bash
+sudo apt install -y bash-completion
+mkdir -p ~/.local/share/bash-completion/completions
+vmctl completion bash > ~/.local/share/bash-completion/completions/vmctl
+```
+
 **powershell (Windows)**
 
 ```powershell
